@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo "This script is validated only for Oracle-Linux, Rocky-Linux, Rhel and Ubuntu"
+VAR="$(awk -F= '$1=="ID" { print $2 ;}' /etc/os-release | tr -d '\"')"
+echo "The Operating System is : $VAR"
+
+if [[ $VAR == "ubuntu" ]]
+then
+        echo "Running ubuntu scripts"
+        sh ./ubuntu.sh
+elif [[ $VAR == "rocky" ]]
+then
+        echo "Running rocky linux scripts"
+        sh ./rocky.sh
+elif [[ $VAR == "rhel" ]]
+then
+        echo "Running RHEL scripts"
+        sh ./rhel.sh
+elif [[ $VAR == "ol" ]]
+then
+        echo "Running oracle linux scripts"
+        sh ./oracle.sh
+else
+        echo "Your oprating system is not validated. Scripts may not work properly in this system"
+fi

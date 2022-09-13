@@ -1,0 +1,24 @@
+#!/bin/bash
+echo "this is the script of oracle linux OS"
+echo "extracting the cert folder"
+tar xvf hardware_cert-1.3.tar.gz
+VAR="ol"
+
+echo "installing pre-requisite rpms and tools"
+rpm -i /home/hardware_cert/rpms/el8/lmbench-3.0a9-6.el8.x86_64.rpm
+yum install -y fio iperf3 sysstat
+rpm -i /home/hardware_cert/rpms/el8/ol-hw-cert-0.1-70.el8.noarch.rpm
+SCRIPT="tar xvf /home/hardware_cert-1.3.tar.gz -C /home/;rpm -i /home/hardware_cert/rpms/el8/lmbench-3.0a9-6.el8.x86_64.rpm;yum install -y fio iperf3 sysstat;rpm -i /home/hardware_cert/rpms/el8/ol-hw-cert-0.1-70.el8.noarch.rpm;ol-hw-cert --server start;"
+
+echo "Enter Network server ip: "
+read HOST
+echo "Network server IP is: $HOST"
+echo "Enter username"
+read USER
+ssh -l $USER $HOST "${SCRIPT}"
+
+echo "changing scripts"
+sed -i "s|etc/oracle-release|etc/os-release|g" /usr/lib/python3.6/site-packages/ol-hw-cert/testcases/runfio.py
+sed -i "s|if \"Oracle Linux Server release 7\" in line or \"Oracle Linux Server release 8\" in line:|if \"${VAR}\" in line or \"Oracle Linux Server release 8\" in line:|" /usr/lib/python3.6/site-packages/ol-hw-cert/testcases/runfio.py
+ol-hw-cert --configure
+ol-hw-cert --run all

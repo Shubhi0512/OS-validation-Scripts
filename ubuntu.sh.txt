@@ -1,0 +1,49 @@
+#!/bin/sh
+
+echo "this is code for ubuntu OS"
+echo "extracting the cert folder"
+sudo tar xvf hardware_cert-1.3.tar.gz
+
+dpkg -r lmbench
+dpkg -r lmbench-doc
+dpkg -r ol-hw-cert
+
+OSFILE="os-release"
+VAR="ubuntu"
+echo "installing pre-requisite rpms and tools"
+sudo apt-get install -y  fio iperf3 sysstat
+sudo add-apt-repository universe
+sudo apt-get update
+sudo apt-get install alien
+sudo alien  /home/hardware_cert/rpms/el8/ol-hw-cert-0.1-70.el8.noarch.rpm --scripts
+sudo alien  /home/hardware_cert/rpms/el8/lmbench-3.0a9-6.el8.x86_64.rpm  --scripts
+sudo dpkg -i ol-hw-cert_0.1-71_all.deb
+sudo dpkg -i lmbench_3.0a9-7_amd64.deb
+SCRIPT="tar xvf /home/hardware_cert-1.3.tar.gz -C /home/;rpm -i /home/hardware_cert/rpms/el8/lmbench-3.0a9-6.el8.x86_64.rpm;yum install -y fio iperf3 sysstat;rpm -i /home/hardware_cert/rpms/el8/ol-hw-cert-0.1-70.el8.noarch.rpm;ol-hw-cert --server start;"
+
+echo "Enter Network server ip: "
+read HOST
+echo "Network server IP is: $HOST"
+echo "Enter username"
+read USER
+ssh -l $USER $HOST "${SCRIPT}"
+
+echo "changing scripts"
+sudo sed -i "s|etc/oracle-release|etc/os-release|g" /usr/lib/python3.6/site-packages/ol-hw-cert/testcases/runfio.py
+sudo sed -i "s|if \"Oracle Linux Server release 7\" in line or \"Oracle Linux Server release 8\" in line:|if \"${VAR}\" in line or \"Oracle Linux Server release 8\" in line:|" /usr/lib/python3.6/site-packages/ol-hw-cert/testcases/runfio.py
+sudo ol-hw-cert --configure
+sudo ol-hw-cert --run all
+
+
+echo "Do you wish to run extra validation tests for ubuntu ?[ Yes or No]"
+read CHOICE
+
+if [ "$CHOICE" == "Yes" ]
+then
+        echo "Running the cannonical certification toolkit, press enter to install and run the toolkit"
+        sudo apt-add-repository ppa:hardware-certification/public
+        sudo apt-get update
+        sudo apt-get install checkbox-ng plainbox-provider-resource-generic plainbox-provider-certification-client plainbox-provider-checkbox
+        checkbox-cli
+fi
+
